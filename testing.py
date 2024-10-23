@@ -18,14 +18,12 @@ def caesar_cipher(text, key, mode='encrypt'):
             result += char
     return result
 
-
 # ========== Vigenere Cipher ==========
 def vigenere(text, key, mode='encrypt'):
-    # Mengubah key menjadi uppercase dan mengulanginya sepanjang text
+    # Mengubah key menjadi uppercase untuk perhitungan
     key = key.upper()
     key_length = len(key)
     key_as_int = [ord(i) for i in key]
-    text = text.upper()
     result = []
     
     for i in range(len(text)):
@@ -33,18 +31,23 @@ def vigenere(text, key, mode='encrypt'):
             # Mendapatkan shift berdasarkan karakter key
             key_shift = key_as_int[i % key_length] - ord('A')
             
-            # Konversi karakter text ke angka (0-25)
-            text_int = ord(text[i]) - ord('A')
+            # Cek apakah karakter adalah huruf besar atau kecil
+            is_upper = text[i].isupper()
+            # Konversi ke uppercase untuk perhitungan
+            char_num = ord(text[i].upper()) - ord('A')
             
             if mode == 'encrypt':
                 # Enkripsi: (text + key) mod 26
-                value = (text_int + key_shift) % 26
+                value = (char_num + key_shift) % 26
             else:
                 # Dekripsi: (text - key + 26) mod 26
-                value = (text_int - key_shift + 26) % 26
-                
-            # Konversi kembali ke karakter
-            result.append(chr(value + ord('A')))
+                value = (char_num - key_shift + 26) % 26
+            
+            # Konversi kembali ke karakter dengan mempertahankan case asli
+            if is_upper:
+                result.append(chr(value + ord('A')))
+            else:
+                result.append(chr(value + ord('a')))
         else:
             # Jika bukan huruf, biarkan karakter tidak berubah
             result.append(text[i])
