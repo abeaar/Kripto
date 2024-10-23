@@ -24,14 +24,13 @@ def rail_fence(text, key, mode='encrypt'):
         rail = [['\n' for _ in range(len(text))] for _ in range(key)]
         direction_down, row, col = False, 0, 0
 
-        for char in text:
-            if row == 0 or row == key - 1:
-                direction_down = not direction_down
-            rail[row][col] = char
-            col += 1
-            row += 1 if direction_down else -1
-
-        return ''.join([rail[i][j] for i in range(key) for j in range(len(text)) if rail[i][j] != '\n'])
+        result = []
+        for i in range(key):
+            for j in range(len(text)):
+                if rail[i][j] != '\n':
+                    result.append(rail[i][j])
+        
+        return "".join(result)
 
     else:  # dekripsi
         rail = [['\n' for _ in range(len(text))] for _ in range(key)]
@@ -55,15 +54,17 @@ def rail_fence(text, key, mode='encrypt'):
 
         result = []
         row, col = 0, 0
-        for i in range(len(text)):
+        for _ in range(len(cipher)):
             if row == 0:
                 direction_down = True
-            if row == key - 1:
+            elif row == key - 1:
                 direction_down = False
+
             if rail[row][col] != '\n':
                 result.append(rail[row][col])
-            col += 1
-            row += 1 if direction_down else -1
+                col += 1
+
+        row += 1 if direction_down else -1
 
         return ''.join(result)
 
@@ -91,7 +92,7 @@ def generate_prime(bits):
         if n % 2 != 0 and is_prime(n):
             return n
 
-def generate_rsa_keys(bits=512):
+def generate_rsa_keys(bits=2048):
     p = generate_prime(bits)
     q = generate_prime(bits)
     n = p * q
