@@ -18,54 +18,39 @@ def caesar_cipher(text, key, mode='encrypt'):
             result += char
     return result
 
-# ========== Rail Fence Cipher ==========
-def rail_fence(text, key, mode='encrypt'):
-    if mode == 'encrypt':
-        rail = [['\n' for _ in range(len(text))] for _ in range(key)]
-        direction_down, row, col = False, 0, 0
 
-        for char in text:
-            if row == 0 or row == key - 1:
-                direction_down = not direction_down
-            rail[row][col] = char
-            col += 1
-            row += 1 if direction_down else -1
-
-        return ''.join([rail[i][j] for i in range(key) for j in range(len(text)) if rail[i][j] != '\n'])
-
-    else:  # dekripsi
-        rail = [['\n' for _ in range(len(text))] for _ in range(key)]
-        direction_down, row, col = None, 0, 0
-
-        for i in range(len(text)):
-            if row == 0:
-                direction_down = True
-            if row == key - 1:
-                direction_down = False
-            rail[row][col] = '*'
-            col += 1
-            row += 1 if direction_down else -1
-
-        index = 0
-        for i in range(key):
-            for j in range(len(text)):
-                if rail[i][j] == '*' and index < len(text):
-                    rail[i][j] = text[index]
-                    index += 1
-
-        result = []
-        row, col = 0, 0
-        for i in range(len(text)):
-            if row == 0:
-                direction_down = True
-            if row == key - 1:
-                direction_down = False
-            if rail[row][col] != '\n':
-                result.append(rail[row][col])
-            col += 1
-            row += 1 if direction_down else -1
-
-        return ''.join(result)
+# ========== Vigenere Cipher ==========
+def vigenere(text, key, mode='encrypt'):
+    # Mengubah key menjadi uppercase dan mengulanginya sepanjang text
+    key = key.upper()
+    key_length = len(key)
+    key_as_int = [ord(i) for i in key]
+    text = text.upper()
+    result = []
+    
+    for i in range(len(text)):
+        if text[i].isalpha():
+            # Mendapatkan shift berdasarkan karakter key
+            key_shift = key_as_int[i % key_length] - ord('A')
+            
+            # Konversi karakter text ke angka (0-25)
+            text_int = ord(text[i]) - ord('A')
+            
+            if mode == 'encrypt':
+                # Enkripsi: (text + key) mod 26
+                value = (text_int + key_shift) % 26
+            else:
+                # Dekripsi: (text - key + 26) mod 26
+                value = (text_int - key_shift + 26) % 26
+                
+            # Konversi kembali ke karakter
+            result.append(chr(value + ord('A')))
+        else:
+            # Jika bukan huruf, biarkan karakter tidak berubah
+            result.append(text[i])
+    
+    # Mengembalikan hasil sebagai string
+    return ''.join(result)
 
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
@@ -214,15 +199,19 @@ if menu == "Caesar Cipher":
         result = caesar_cipher(text, key, mode.lower())
         st.write(f"Hasil: {result}")
 
-elif menu == "Rail Fence":
-    st.header("Rail Fence Cipher")
+elif menu == "Vigenere":
+    st.header("Vigenere Cipher")
     text = st.text_input("Masukkan Teks")
-    key = st.number_input("Masukkan Key", min_value=2, step=1)
+    key = st.text_input("Masukkan Key")
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
 
     if st.button("Proses"):
-        result = rail_fence(text, key, mode.lower())
-        st.write(f"Hasil: {result}")
+        if key and text:  # Memastikan input tidak kosong
+            result = vigenere(text, key, mode.lower())
+            st.success(f"Hasil: {result}")
+        else:
+            st.error("Mohon isi teks dan key terlebih dahulu")
+
 
 elif menu == "RSA":
     st.header("RSA Cipher")
