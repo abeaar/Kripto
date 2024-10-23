@@ -2,8 +2,11 @@ import streamlit as st
 import base64
 import os
 from itertools import cycle
+import random
+import math
+from hashlib import sha256
 
-# Fungsi Caesar Cipher
+# ========== Caesar Cipher ==========
 def caesar_cipher(text, key, mode='encrypt'):
     result = ""
     key = key if mode == 'encrypt' else -key
@@ -15,7 +18,7 @@ def caesar_cipher(text, key, mode='encrypt'):
             result += char
     return result
 
-# Fungsi Rail Fence Cipher
+# ========== Rail Fence Cipher ==========
 def rail_fence(text, key, mode='encrypt'):
     if mode == 'encrypt':
         rail = [['\n' for _ in range(len(text))] for _ in range(key)]
@@ -64,38 +67,142 @@ def rail_fence(text, key, mode='encrypt'):
 
         return ''.join(result)
 
-# Simple XOR Cipher sebagai pengganti AES
-def xor_encrypt(text, key):
-    # Convert text to bytes if it's a string
-    if isinstance(text, str):
-        text = text.encode()
-    if isinstance(key, str):
-        key = key.encode()
-        
-    # XOR operation
-    xored = bytes(a ^ b for a, b in zip(text, cycle(key)))
-    return base64.b64encode(xored).decode('utf-8')
+# ========== Simple RSA Implementation ==========
+def is_prime(n, k=5):
+    if n < 2: return False
+    for p in [2,3,5,7,11,13,17,19,23,29]:
+        if n % p == 0: return n == p
+    s, d = 0, n-1
+    while d % 2 == 0:
+        s, d = s+1, d//2
+    for i in range(k):
+        a = random.randrange(2, n-1)
+        x = pow(a, d, n)
+        if x == 1 or x == n-1: continue
+        for r in range(s-1):
+            x = (x * x) % n
+            if x == n-1: break
+        else: return False
+    return True
 
-def xor_decrypt(encrypted_text, key):
+def generate_prime(bits):
+    while True:
+        n = random.getrandbits(bits)
+        if n % 2 != 0 and is_prime(n):
+            return n
+
+def generate_rsa_keys(bits=512):
+    p = generate_prime(bits)
+    q = generate_prime(bits)
+    n = p * q
+    phi = (p-1) * (q-1)
+    e = 65537
+    d = pow(e, -1, phi)
+    return (e, n), (d, n)
+
+def rsa_encrypt(message, public_key):
+    e, n = public_key
+    message_bytes = message.encode()
+    message_int = int.from_bytes(message_bytes, 'big')
+    if message_int >= n:
+        raise ValueError("Message too long for current key size")
+    encrypted_int = pow(message_int, e, n)
+    return base64.b64encode(encrypted_int.to_bytes((encrypted_int.bit_length() + 7) // 8, 'big')).decode()
+
+def rsa_decrypt(encrypted_message, private_key):
     try:
-        if isinstance(key, str):
-            key = key.encode()
-        
-        # Decode base64 and XOR
-        encrypted_bytes = base64.b64decode(encrypted_text)
-        decrypted = bytes(a ^ b for a, b in zip(encrypted_bytes, cycle(key)))
-        return decrypted.decode('utf-8')
+        d, n = private_key
+        encrypted_int = int.from_bytes(base64.b64decode(encrypted_message), 'big')
+        decrypted_int = pow(encrypted_int, d, n)
+        decrypted_bytes = decrypted_int.to_bytes((decrypted_int.bit_length() + 7) // 8, 'big')
+        return decrypted_bytes.decode()
     except Exception as e:
         return f"Dekripsi gagal: {str(e)}"
 
-# Streamlit UI
+# ========== Simple AES Implementation ==========
+def pad(data, block_size=16):
+    padding_len = block_size - (len(data) % block_size)
+    padding = bytes([padding_len] * padding_len)
+    return data + padding
+
+def unpad(data):
+    padding_len = data[-1]
+    return data[:-padding_len]
+
+def aes_key_expansion(key):
+    # Simplified key expansion for demo purposes
+    return sha256(key).digest()
+
+def aes_encrypt(plain_text, key):
+    try:
+        if isinstance(plain_text, str):
+            plain_text = plain_text.encode()
+        
+        # Generate a random IV
+        iv = os.urandom(16)
+        
+        # Expand key using SHA-256
+        expanded_key = aes_key_expansion(key)
+        
+        # Pad the plaintext
+        padded_text = pad(plain_text)
+        
+        # XOR with IV and expanded key for simplification
+        encrypted = b''
+        prev_block = iv
+        for i in range(0, len(padded_text), 16):
+            block = padded_text[i:i+16]
+            # XOR with previous block (CBC mode) and key
+            encrypted_block = bytes(a ^ b ^ c for a, b, c in zip(block, prev_block, cycle(expanded_key)))
+            encrypted += encrypted_block
+            prev_block = encrypted_block
+        
+        # Combine IV and ciphertext
+        final_encrypted = iv + encrypted
+        return base64.b64encode(final_encrypted).decode()
+    except Exception as e:
+        return f"Enkripsi gagal: {str(e)}"
+
+def aes_decrypt(encrypted_text, key):
+    try:
+        # Decode base64
+        encrypted_data = base64.b64decode(encrypted_text)
+        
+        # Split IV and ciphertext
+        iv = encrypted_data[:16]
+        ciphertext = encrypted_data[16:]
+        
+        # Expand key using SHA-256
+        expanded_key = aes_key_expansion(key)
+        
+        # Decrypt
+        decrypted = b''
+        prev_block = iv
+        for i in range(0, len(ciphertext), 16):
+            block = ciphertext[i:i+16]
+            # XOR with previous block (CBC mode) and key
+            decrypted_block = bytes(a ^ b ^ c for a, b, c in zip(block, prev_block, cycle(expanded_key)))
+            decrypted += decrypted_block
+            prev_block = block
+        
+        # Unpad
+        unpadded = unpad(decrypted)
+        return unpadded.decode()
+    except Exception as e:
+        return f"Dekripsi gagal: {str(e)}"
+
+# ========== Streamlit UI ==========
 st.title("Aplikasi Kriptografi")
 
-# Generate random key for XOR cipher
-if 'xor_key' not in st.session_state:
-    st.session_state.xor_key = os.urandom(16)
+# Initialize session state for RSA keys
+if 'public_key' not in st.session_state or 'private_key' not in st.session_state:
+    st.session_state.public_key, st.session_state.private_key = generate_rsa_keys()
 
-menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Rail Fence", "XOR Cipher"])
+# Initialize session state for AES key
+if 'aes_key' not in st.session_state:
+    st.session_state.aes_key = os.urandom(32)
+
+menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Rail Fence", "RSA", "AES"])
 
 if menu == "Caesar Cipher":
     st.header("Caesar Cipher")
@@ -117,16 +224,36 @@ elif menu == "Rail Fence":
         result = rail_fence(text, key, mode.lower())
         st.write(f"Hasil: {result}")
 
-elif menu == "XOR Cipher":
-    st.header("XOR Cipher")
+elif menu == "RSA":
+    st.header("RSA Cipher")
+    st.write("Public Key (e, n):", st.session_state.public_key)
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
 
     if mode == "Encrypt":
         text = st.text_input("Masukkan Teks")
         if st.button("Enkripsi"):
-            result = xor_encrypt(text, st.session_state.xor_key)
+            try:
+                result = rsa_encrypt(text, st.session_state.public_key)
+                st.write(f"Hasil Enkripsi: {result}")
+            except ValueError as e:
+                st.error(str(e))
+
+    else:
+        encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
+        if st.button("Dekripsi"):
+            result = rsa_decrypt(encrypted_text, st.session_state.private_key)
+            st.write(f"Hasil Dekripsi: {result}")
+
+elif menu == "AES":
+    st.header("AES Cipher")
+    mode = st.radio("Mode", ["Encrypt", "Decrypt"])
+
+    if mode == "Encrypt":
+        text = st.text_input("Masukkan Teks")
+        if st.button("Enkripsi"):
+            result = aes_encrypt(text, st.session_state.aes_key)
             st.write(f"Hasil Enkripsi: {result}")
-            st.write(f"Kunci (hex): {st.session_state.xor_key.hex()}")
+            st.write(f"Kunci (hex): {st.session_state.aes_key.hex()}")
             st.info("Simpan kunci ini untuk dekripsi!")
 
     else:
@@ -135,7 +262,7 @@ elif menu == "XOR Cipher":
         if st.button("Dekripsi"):
             try:
                 key = bytes.fromhex(key_hex)
-                result = xor_decrypt(encrypted_text, key)
+                result = aes_decrypt(encrypted_text, key)
                 st.write(f"Hasil Dekripsi: {result}")
             except ValueError:
                 st.error("Format kunci tidak valid!")
