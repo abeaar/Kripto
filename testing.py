@@ -1,9 +1,7 @@
 import streamlit as st
-import os
 import base64
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import padding
+import os
+from itertools import cycle
 
 # Fungsi Caesar Cipher
 def caesar_cipher(text, key, mode='encrypt'):
@@ -66,43 +64,38 @@ def rail_fence(text, key, mode='encrypt'):
 
         return ''.join(result)
 
-# Fungsi AES Cipher dengan key management yang lebih aman
-def generate_key():
-    return os.urandom(32)
+# Simple XOR Cipher sebagai pengganti AES
+def xor_encrypt(text, key):
+    # Convert text to bytes if it's a string
+    if isinstance(text, str):
+        text = text.encode()
+    if isinstance(key, str):
+        key = key.encode()
+        
+    # XOR operation
+    xored = bytes(a ^ b for a, b in zip(text, cycle(key)))
+    return base64.b64encode(xored).decode('utf-8')
 
-def aes_encrypt(plain_text, key):
-    iv = os.urandom(16)
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-    encryptor = cipher.encryptor()
-
-    padder = padding.PKCS7(algorithms.AES.block_size).padder()
-    padded_data = padder.update(plain_text.encode()) + padder.finalize()
-    encrypted = encryptor.update(padded_data) + encryptor.finalize()
-
-    return base64.b64encode(iv + encrypted).decode()
-
-def aes_decrypt(encrypted_text, key):
+def xor_decrypt(encrypted_text, key):
     try:
-        encrypted_data = base64.b64decode(encrypted_text)
-        iv, encrypted_message = encrypted_data[:16], encrypted_data[16:]
-
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-        decryptor = cipher.decryptor()
-        padded_data = decryptor.update(encrypted_message) + decryptor.finalize()
-
-        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-        return (unpadder.update(padded_data) + unpadder.finalize()).decode()
+        if isinstance(key, str):
+            key = key.encode()
+        
+        # Decode base64 and XOR
+        encrypted_bytes = base64.b64decode(encrypted_text)
+        decrypted = bytes(a ^ b for a, b in zip(encrypted_bytes, cycle(key)))
+        return decrypted.decode('utf-8')
     except Exception as e:
         return f"Dekripsi gagal: {str(e)}"
 
 # Streamlit UI
 st.title("Aplikasi Kriptografi")
 
-# Simpan key AES di session state
-if 'aes_key' not in st.session_state:
-    st.session_state.aes_key = generate_key()
+# Generate random key for XOR cipher
+if 'xor_key' not in st.session_state:
+    st.session_state.xor_key = os.urandom(16)
 
-menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Rail Fence", "AES"])
+menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Rail Fence", "XOR Cipher"])
 
 if menu == "Caesar Cipher":
     st.header("Caesar Cipher")
@@ -124,16 +117,16 @@ elif menu == "Rail Fence":
         result = rail_fence(text, key, mode.lower())
         st.write(f"Hasil: {result}")
 
-elif menu == "AES":
-    st.header("AES Cipher")
+elif menu == "XOR Cipher":
+    st.header("XOR Cipher")
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
 
     if mode == "Encrypt":
         text = st.text_input("Masukkan Teks")
         if st.button("Enkripsi"):
-            result = aes_encrypt(text, st.session_state.aes_key)
+            result = xor_encrypt(text, st.session_state.xor_key)
             st.write(f"Hasil Enkripsi: {result}")
-            st.write(f"Kunci (hex): {st.session_state.aes_key.hex()}")
+            st.write(f"Kunci (hex): {st.session_state.xor_key.hex()}")
             st.info("Simpan kunci ini untuk dekripsi!")
 
     else:
@@ -142,7 +135,7 @@ elif menu == "AES":
         if st.button("Dekripsi"):
             try:
                 key = bytes.fromhex(key_hex)
-                result = aes_decrypt(encrypted_text, key)
+                result = xor_decrypt(encrypted_text, key)
                 st.write(f"Hasil Dekripsi: {result}")
             except ValueError:
                 st.error("Format kunci tidak valid!")
