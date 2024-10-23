@@ -24,13 +24,14 @@ def rail_fence(text, key, mode='encrypt'):
         rail = [['\n' for _ in range(len(text))] for _ in range(key)]
         direction_down, row, col = False, 0, 0
 
-        result = []
-        for i in range(key):
-            for j in range(len(text)):
-                if rail[i][j] != '\n':
-                    result.append(rail[i][j])
-        
-        return "".join(result)
+        for char in text:
+            if row == 0 or row == key - 1:
+                direction_down = not direction_down
+            rail[row][col] = char
+            col += 1
+            row += 1 if direction_down else -1
+
+        return ''.join([rail[i][j] for i in range(key) for j in range(len(text)) if rail[i][j] != '\n'])
 
     else:  # dekripsi
         rail = [['\n' for _ in range(len(text))] for _ in range(key)]
@@ -54,17 +55,15 @@ def rail_fence(text, key, mode='encrypt'):
 
         result = []
         row, col = 0, 0
-        for _ in range(len(cipher)):
+        for i in range(len(text)):
             if row == 0:
                 direction_down = True
-            elif row == key - 1:
+            if row == key - 1:
                 direction_down = False
-
             if rail[row][col] != '\n':
                 result.append(rail[row][col])
-                col += 1
-
-        row += 1 if direction_down else -1
+            col += 1
+            row += 1 if direction_down else -1
 
         return ''.join(result)
 
