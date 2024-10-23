@@ -18,8 +18,24 @@ def caesar_cipher(text, key, mode='encrypt'):
             result += char
     return result
 
-# ========== Vigenere Cipher ==========
+
+def validate_input(text, key):
+    """
+    Memvalidasi input teks dan key.
+    Mengembalikan tuple (is_valid, error_message)
+    """
+    if not key.replace(" ", "").isalpha():
+        return False, "Key harus berupa huruf (A-Z atau a-z)"
+    if not text.replace(" ", "").isalpha():
+        return False, "Teks harus berupa huruf (A-Z atau a-z)"
+    return True, ""
+
 def vigenere(text, key, mode='encrypt'):
+    # Validasi input terlebih dahulu
+    is_valid, error_message = validate_input(text, key)
+    if not is_valid:
+        raise ValueError(error_message)
+
     # Mengubah key menjadi uppercase untuk perhitungan
     key = key.upper()
     key_length = len(key)
@@ -49,11 +65,15 @@ def vigenere(text, key, mode='encrypt'):
             else:
                 result.append(chr(value + ord('a')))
         else:
-            # Jika bukan huruf, biarkan karakter tidak berubah
-            result.append(text[i])
+            # Spasi diperbolehkan dan tidak diubah
+            if text[i].isspace():
+                result.append(text[i])
+            else:
+                raise ValueError(f"Karakter tidak valid ditemukan: '{text[i]}'. Gunakan hanya huruf dan spasi.")
     
     # Mengembalikan hasil sebagai string
     return ''.join(result)
+    
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
     if n < 2: return False
@@ -209,8 +229,14 @@ elif menu == "Vigenere":
 
     if st.button("Proses"):
         if key and text:  # Memastikan input tidak kosong
-            result = vigenere(text, key, mode.lower())
-            st.success(f"Hasil: {result}")
+            # Validasi input
+            if not key.replace(" ", "").isalpha():
+                st.error("Key harus berupa huruf (A-Z atau a-z)")
+            elif not text.replace(" ", "").isalpha():
+                st.error("Teks harus berupa huruf (A-Z atau a-z)")
+            else:
+                result = vigenere(text, key, mode.lower())
+                st.success(f"Hasil: {result}")
         else:
             st.error("Mohon isi teks dan key terlebih dahulu")
 
