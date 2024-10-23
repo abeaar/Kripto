@@ -187,7 +187,7 @@ if 'public_key' not in st.session_state or 'private_key' not in st.session_state
 if 'aes_key' not in st.session_state:
     st.session_state.aes_key = os.urandom(32)
 
-menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Rail Fence", "RSA", "AES"])
+menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "vigenere", "RSA", "AES"])
 
 if menu == "Caesar Cipher":
     st.header("Caesar Cipher")
