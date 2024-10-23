@@ -21,46 +21,36 @@ def caesar_cipher(text, key, mode='encrypt'):
 
 # ========== Vigenere Cipher ==========
 def vigenere(text, key, mode='encrypt'):
-    # Mendefinisikan range karakter yang dapat digunakan (ASCII printable)
-    # ASCII printable range: 32 (space) sampai 126 (~)
-    MIN_CHAR = 32  # space character
-    MAX_CHAR = 126  # tilde character
-    RANGE = MAX_CHAR - MIN_CHAR + 1  # jumlah karakter yang dapat digunakan
-    
-    # Memastikan key tidak kosong
-    if not key:
-        return text
-        
-    result = []
+    # Mengubah key menjadi uppercase dan mengulanginya sepanjang text
+    key = key.upper()
     key_length = len(key)
+    key_as_int = [ord(i) for i in key]
+    text = text.upper()
+    result = []
     
     for i in range(len(text)):
-        char = text[i]
-        # Hanya proses karakter dalam range yang ditentukan
-        if MIN_CHAR <= ord(char) <= MAX_CHAR:
-            # Menggunakan karakter key saat ini
-            key_char = key[i % key_length]
-            key_shift = ord(key_char) - MIN_CHAR
+        if text[i].isalpha():
+            # Mendapatkan shift berdasarkan karakter key
+            key_shift = key_as_int[i % key_length] - ord('A')
             
-            # Mendapatkan posisi karakter dalam range
-            char_position = ord(char) - MIN_CHAR
+            # Konversi karakter text ke angka (0-25)
+            text_int = ord(text[i]) - ord('A')
             
             if mode == 'encrypt':
-                # Enkripsi: (position + shift) mod RANGE
-                new_position = (char_position + key_shift) % RANGE
+                # Enkripsi: (text + key) mod 26
+                value = (text_int + key_shift) % 26
             else:
-                # Dekripsi: (position - shift + RANGE) mod RANGE
-                new_position = (char_position - key_shift + RANGE) % RANGE
-            
+                # Dekripsi: (text - key + 26) mod 26
+                value = (text_int - key_shift + 26) % 26
+                
             # Konversi kembali ke karakter
-            new_char = chr(new_position + MIN_CHAR)
-            result.append(new_char)
+            result.append(chr(value + ord('A')))
         else:
-            # Karakter di luar range tetap tidak berubah
-            result.append(char)
+            # Jika bukan huruf, biarkan karakter tidak berubah
+            result.append(text[i])
     
+    # Mengembalikan hasil sebagai string
     return ''.join(result)
-
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
     if n < 2: return False
