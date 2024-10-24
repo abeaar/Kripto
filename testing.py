@@ -270,3 +270,8 @@ elif menu == "AES":
                 st.write(f"Hasil Dekripsi: {result}")
             except ValueError:
                 st.error("Format kunci tidak valid!")
+
+elif menu == "Super Enkripsi":
+    st.header("Super Enkripsi Caesar dan Vigenere")
+    text = st.text_input("Masukkan Teks")
+    mode = st.radio("Mode", ["Encrypt", "Decrypt"])
