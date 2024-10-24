@@ -21,12 +21,11 @@ def caesar_cipher(text, key, mode='encrypt'):
 
 # ========== Vigenere Cipher ==========
 def vigenere(text, key, mode='encrypt'):
-    # Mengubah key menjadi uppercase untuk perhitungan
+    key = key.upper()
     key_length = len(key)
     key_as_int = [ord(i) for i in key]
     result = list(text)  # Mengubah text menjadi list untuk memudahkan penggantian karakter
     
-    # Hitung berapa huruf yang sudah diproses untuk tracking posisi key
     alphabet_pos = 0
     
     for i in range(len(text)):
@@ -34,10 +33,8 @@ def vigenere(text, key, mode='encrypt'):
             # Mendapatkan shift berdasarkan karakter key
             # Gunakan alphabet_pos untuk mengtrack posisi key yang sebenarnya
             key_shift = key_as_int[alphabet_pos % key_length] - ord('A')
-            
-            # Cek apakah karakter adalah huruf besar atau kecil
+
             is_upper = text[i].isupper()
-            # Konversi ke uppercase untuk perhitungan
             char_num = ord(text[i].upper()) - ord('A')
             
             if mode == 'encrypt':
@@ -217,7 +214,7 @@ elif menu == "Vigenere":
 
     if st.button("Proses"):
         if key and text:  # Memastikan input tidak kosong
-            result = vigenere(text, key, mode)
+            result = vigenere(text, key, mode.lower())
             st.success(f"Hasil: {result}")
         else:
             st.error("Mohon isi teks dan key terlebih dahulu")
