@@ -189,34 +189,38 @@ def aes_decrypt(encrypted_text, key):
 
 
 def super_encrypt(text, caesar_key, vigenere_key, aes_key, rsa_public_key):
-    # Step 1: Caesar Cipher Encryption
-    encrypted_caesar = caesar_cipher(text, caesar_key, mode='encrypt')
-    
-    # Step 2: Vigenere Cipher Encryption
-    encrypted_vigenere = vigenere(encrypted_caesar, vigenere_key, mode='encrypt')
-    
-    # Step 3: AES Encryption
-    encrypted_aes = aes_encrypt(encrypted_vigenere, aes_key)
-    
-    # Step 4: RSA Encryption
-    encrypted_rsa = rsa_encrypt(encrypted_aes, rsa_public_key)
-    
-    return encrypted_rsa
+    try:
+        # Step 1: Caesar Cipher Encryption
+        encrypted_caesar = caesar_cipher(text, caesar_key, mode='encrypt')
+
+        # Step 2: Vigenere Cipher Encryption
+        encrypted_vigenere = vigenere(encrypted_caesar, vigenere_key, mode='encrypt')
+
+        # Step 3: AES Encryption
+        encrypted_aes = aes_encrypt(encrypted_vigenere, aes_key)
+
+        # Step 4: RSA Encryption
+        encrypted_rsa = rsa_encrypt(encrypted_aes, rsa_public_key)
+
+        return encrypted_rsa
+    except Exception as e:
+        return f"Super enkripsi gagal: {str(e)}"
+
 
 def super_decrypt(text, caesar_key, vigenere_key, aes_key, rsa_private_key):
     try:
         # Step 1: RSA Decryption
         decrypted_rsa = rsa_decrypt(text, rsa_private_key)
-        
+
         # Step 2: AES Decryption
         decrypted_aes = aes_decrypt(decrypted_rsa, aes_key)
-        
+
         # Step 3: Vigenere Cipher Decryption
         decrypted_vigenere = vigenere(decrypted_aes, vigenere_key, mode='decrypt')
-        
+
         # Step 4: Caesar Cipher Decryption
         decrypted_caesar = caesar_cipher(decrypted_vigenere, caesar_key, mode='decrypt')
-        
+
         return decrypted_caesar
     except Exception as e:
         return f"Super dekripsi gagal: {str(e)}"
@@ -270,17 +274,13 @@ elif menu == "RSA":
             try:
                 result = rsa_encrypt(text, st.session_state.public_key)
                 st.write(f"Hasil Enkripsi: {result}")
-                st.write(f"Private Key (d,n) : {st.session_state.private_key}")
             except ValueError as e:
                 st.error(str(e))
 
     else:
         encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
-        keyd = st.number_input("Masukkan Private key(d)",value=None)
-        keyn = st.number_input("Masukkan Private key(n)",value=None)
         if st.button("Dekripsi"):
-            key = two_to_one(keyd,keyn)
-            result = rsa_decrypt(encrypted_text,key)
+            result = rsa_decrypt(encrypted_text, st.session_state.private_key)
             st.write(f"Hasil Dekripsi: {result}")
 
 elif menu == "AES":
@@ -308,7 +308,7 @@ elif menu == "AES":
 
 elif menu == "Super Enkripsi":
     st.header("Super Enkripsi: Caesar, Vigenere, AES, dan RSA")
-    
+
     text = st.text_input("Masukkan Teks")
     caesar_key = st.number_input("Masukkan Key Caesar", min_value=1, max_value=25, step=1)
     vigenere_key = st.text_input("Masukkan Key Vigenere")
@@ -330,13 +330,13 @@ elif menu == "Super Enkripsi":
 
     else:
         encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
-        keyd = st.number_input("Masukkan Private key(d)", value=private_key[0])
-        keyn = st.number_input("Masukkan Private key(n)", value=private_key[1])
+        keyd = st.text_input("Masukkan Private key(d)", value=str(private_key[0]))
+        keyn = st.text_input("Masukkan Private key(n)", value=str(private_key[1]))
 
         if st.button("Dekripsi"):
             try:
                 aes_key = bytes.fromhex(aes_key_hex)
-                rsa_private_key = (keyd, keyn)
+                rsa_private_key = (int(keyd), int(keyn))  # Parsing keyd dan keyn menjadi integer
                 result = super_decrypt(encrypted_text, caesar_key, vigenere_key, aes_key, rsa_private_key)
                 st.success(f"Hasil Dekripsi: {result}")
             except Exception as e:
