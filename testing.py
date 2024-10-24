@@ -266,6 +266,6 @@ elif menu == "AES":
                 st.error("Format kunci tidak valid!")
 
 elif menu == "Super Enkripsi":
-    st.hedaer("Super Enkripsi Caesar dan Vigenere")
+    st.header("Super Enkripsi Caesar dan Vigenere")
     text = st.text_input("Masukkan Teks")
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
