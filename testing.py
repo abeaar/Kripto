@@ -198,7 +198,7 @@ if 'public_key' not in st.session_state or 'private_key' not in st.session_state
 if 'aes_key' not in st.session_state:
     st.session_state.aes_key = os.urandom(32)
 
-menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Vigenere", "RSA", "AES"])
+menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Vigenere", "RSA", "AES","Super Enkripsi"])
 
 if menu == "Caesar Cipher":
     st.header("Caesar Cipher")
@@ -271,3 +271,7 @@ elif menu == "AES":
             except ValueError:
                 st.error("Format kunci tidak valid!")
 
+elif menu == "Super Enkripsi":
+    st.header("Super Enkripsi Caesar dan Vigenere")
+    text = st.text_input("Masukkan Teks")
+    mode = st.radio("Mode", ["Encrypt", "Decrypt"])
