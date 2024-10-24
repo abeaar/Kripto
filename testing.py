@@ -264,3 +264,18 @@ elif menu == "AES":
                 st.write(f"Hasil Dekripsi: {result}")
             except ValueError:
                 st.error("Format kunci tidak valid!")
+
+elif menu == "Super Enkripsi":
+    st.hedaer("Super Enkripsi Caesar dan Vigenere")
+    text = st.text_input("Masukkan Teks")
+    keyC = st.number_input("Key caesar", min_value=1, max_value=25, step=1)
+    keyV = st.text_input("Key Vigenere")
+    mode = st.radio("Mode", ["Encrypt", "Decrypt"])
+    
+    if st.button("Proses"):
+        if keyV and text:  # Memastikan input tidak kosong
+            resultC = caesar_cipher(text, keyC, mode.lower())
+            result = vigenere(resultC, keyV, mode.lower())
+            st.success(f"Hasil: {result}")
+        else:
+            st.error("Mohon isi teks dan key terlebih dahulu")
