@@ -227,7 +227,7 @@ def super_decrypt(text, caesar_key, vigenere_key, aes_key, rsa_private_key):
 
 
 # ========== Streamlit UI ==========
-st.title("Kriptografi kelompok Hengker")
+st.title("Kriptografi kelompok Esigma")
 
 # Initialize session state for RSA keys
 if 'public_key' not in st.session_state or 'private_key' not in st.session_state:
