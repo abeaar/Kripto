@@ -61,7 +61,7 @@ def vigenere(text, key, mode='encrypt'):
     
     # Mengembalikan hasil sebagai string
     return ''.join(result)
-    
+
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
     if n < 2: return False
@@ -187,7 +187,7 @@ def aes_decrypt(encrypted_text, key):
         return f"Dekripsi gagal: {str(e)}"
 
 # ========== Streamlit UI ==========
-st.title("Aplikasi Kriptografi")
+st.title("Kriptografi wle wle")
 
 # Initialize session state for RSA keys
 if 'public_key' not in st.session_state or 'private_key' not in st.session_state:
