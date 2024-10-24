@@ -19,33 +19,22 @@ def caesar_cipher(text, key, mode='encrypt'):
     return result
 
 
-def validate_input(text, key):
-    """
-    Memvalidasi input teks dan key.
-    Mengembalikan tuple (is_valid, error_message)
-    """
-    if not key.replace(" ", "").isalpha():
-        return False, "Key harus berupa huruf (A-Z atau a-z)"
-    if not text.replace(" ", "").isalpha():
-        return False, "Teks harus berupa huruf (A-Z atau a-z)"
-    return True, ""
-
+# ========== Vigenere Cipher ==========
 def vigenere(text, key, mode='encrypt'):
-    # Validasi input terlebih dahulu
-    is_valid, error_message = validate_input(text, key)
-    if not is_valid:
-        raise ValueError(error_message)
-
     # Mengubah key menjadi uppercase untuk perhitungan
     key = key.upper()
     key_length = len(key)
     key_as_int = [ord(i) for i in key]
-    result = []
+    result = list(text)  # Mengubah text menjadi list untuk memudahkan penggantian karakter
+    
+    # Hitung berapa huruf yang sudah diproses untuk tracking posisi key
+    alphabet_pos = 0
     
     for i in range(len(text)):
         if text[i].isalpha():
             # Mendapatkan shift berdasarkan karakter key
-            key_shift = key_as_int[i % key_length] - ord('A')
+            # Gunakan alphabet_pos untuk mengtrack posisi key yang sebenarnya
+            key_shift = key_as_int[alphabet_pos % key_length] - ord('A')
             
             # Cek apakah karakter adalah huruf besar atau kecil
             is_upper = text[i].isupper()
@@ -61,15 +50,15 @@ def vigenere(text, key, mode='encrypt'):
             
             # Konversi kembali ke karakter dengan mempertahankan case asli
             if is_upper:
-                result.append(chr(value + ord('A')))
+                result[i] = chr(value + ord('A'))
             else:
-                result.append(chr(value + ord('a')))
+                result[i] = chr(value + ord('a'))
+                
+            # Increment alphabet_pos hanya ketika memproses huruf
+            alphabet_pos += 1
         else:
-            # Spasi diperbolehkan dan tidak diubah
-            if text[i].isspace():
-                result.append(text[i])
-            else:
-                raise ValueError(f"Karakter tidak valid ditemukan: '{text[i]}'. Gunakan hanya huruf dan spasi.")
+            # Jika bukan huruf, biarkan karakter tidak berubah
+            result[i] = text[i]
     
     # Mengembalikan hasil sebagai string
     return ''.join(result)
@@ -229,14 +218,8 @@ elif menu == "Vigenere":
 
     if st.button("Proses"):
         if key and text:  # Memastikan input tidak kosong
-            # Validasi input
-            if not key.replace(" ", "").isalpha():
-                st.error("Key harus berupa huruf (A-Z atau a-z)")
-            elif not text.replace(" ", "").isalpha():
-                st.error("Teks harus berupa huruf (A-Z atau a-z)")
-            else:
-                result = vigenere(text, key, mode.lower())
-                st.success(f"Hasil: {result}")
+            result = vigenere(text, key, mode.lower())
+            st.success(f"Hasil: {result}")
         else:
             st.error("Mohon isi teks dan key terlebih dahulu")
 
