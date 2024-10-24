@@ -187,6 +187,41 @@ def aes_decrypt(encrypted_text, key):
     except Exception as e:
         return f"Dekripsi gagal: {str(e)}"
 
+
+def super_encrypt(text, caesar_key, vigenere_key, aes_key, rsa_public_key):
+    # Step 1: Caesar Cipher Encryption
+    encrypted_caesar = caesar_cipher(text, caesar_key, mode='encrypt')
+    
+    # Step 2: Vigenere Cipher Encryption
+    encrypted_vigenere = vigenere(encrypted_caesar, vigenere_key, mode='encrypt')
+    
+    # Step 3: AES Encryption
+    encrypted_aes = aes_encrypt(encrypted_vigenere, aes_key)
+    
+    # Step 4: RSA Encryption
+    encrypted_rsa = rsa_encrypt(encrypted_aes, rsa_public_key)
+    
+    return encrypted_rsa
+
+def super_decrypt(text, caesar_key, vigenere_key, aes_key, rsa_private_key):
+    try:
+        # Step 1: RSA Decryption
+        decrypted_rsa = rsa_decrypt(text, rsa_private_key)
+        
+        # Step 2: AES Decryption
+        decrypted_aes = aes_decrypt(decrypted_rsa, aes_key)
+        
+        # Step 3: Vigenere Cipher Decryption
+        decrypted_vigenere = vigenere(decrypted_aes, vigenere_key, mode='decrypt')
+        
+        # Step 4: Caesar Cipher Decryption
+        decrypted_caesar = caesar_cipher(decrypted_vigenere, caesar_key, mode='decrypt')
+        
+        return decrypted_caesar
+    except Exception as e:
+        return f"Super dekripsi gagal: {str(e)}"
+
+
 # ========== Streamlit UI ==========
 st.title("Aplikasi Kriptografi")
 
@@ -272,6 +307,37 @@ elif menu == "AES":
                 st.error("Format kunci tidak valid!")
 
 elif menu == "Super Enkripsi":
-    st.header("Super Enkripsi Caesar dan Vigenere")
+    st.header("Super Enkripsi: Caesar, Vigenere, AES, dan RSA")
+    
     text = st.text_input("Masukkan Teks")
+    caesar_key = st.number_input("Masukkan Key Caesar", min_value=1, max_value=25, step=1)
+    vigenere_key = st.text_input("Masukkan Key Vigenere")
+    aes_key_hex = st.text_input("Masukkan Key AES (hex)", value=st.session_state.aes_key.hex())
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
+
+    # RSA keys from session state
+    public_key = st.session_state.public_key
+    private_key = st.session_state.private_key
+
+    if mode == "Encrypt":
+        if st.button("Enkripsi"):
+            try:
+                aes_key = bytes.fromhex(aes_key_hex)
+                result = super_encrypt(text, caesar_key, vigenere_key, aes_key, public_key)
+                st.success(f"Hasil Enkripsi: {result}")
+            except Exception as e:
+                st.error(f"Enkripsi gagal: {str(e)}")
+
+    else:
+        encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
+        keyd = st.number_input("Masukkan Private key(d)", value=private_key[0])
+        keyn = st.number_input("Masukkan Private key(n)", value=private_key[1])
+
+        if st.button("Dekripsi"):
+            try:
+                aes_key = bytes.fromhex(aes_key_hex)
+                rsa_private_key = (keyd, keyn)
+                result = super_decrypt(encrypted_text, caesar_key, vigenere_key, aes_key, rsa_private_key)
+                st.success(f"Hasil Dekripsi: {result}")
+            except Exception as e:
+                st.error(f"Dekripsi gagal: {str(e)}")
