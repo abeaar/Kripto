@@ -18,7 +18,7 @@ def caesar_cipher(text, key, mode='encrypt'):
             result += char
     return result
 
-
+# ========== Vigenere Cipher ==========
 def validate_input(text, key):
     """
     Memvalidasi input teks dan key.
@@ -73,7 +73,7 @@ def vigenere(text, key, mode='encrypt'):
     
     # Mengembalikan hasil sebagai string
     return ''.join(result)
-    
+
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
     if n < 2: return False
@@ -227,16 +227,25 @@ elif menu == "Vigenere":
     key = st.text_input("Masukkan Key")
     mode = st.radio("Mode", ["Encrypt", "Decrypt"])
 
+    if key:
+        if not all(c.isalpha() for c in key):
+            st.warning("Key hanya boleh berisi huruf (A-Z atau a-z). Karakter lain akan diabaikan.")
+            # Filter key untuk hanya mengambil huruf
+            key = ''.join(c for c in key if c.isalpha())
+            if not key:  # Jika tidak ada huruf sama sekali
+                st.error("Key harus mengandung minimal satu huruf!")
+
     if st.button("Proses"):
         if key and text:  # Memastikan input tidak kosong
-            # Validasi input
-            if not key.replace(" ", "").isalpha():
-                st.error("Key harus berupa huruf (A-Z atau a-z)")
-            elif not text.replace(" ", "").isalpha():
-                st.error("Teks harus berupa huruf (A-Z atau a-z)")
-            else:
+            if any(c.isalpha() for c in text):  # Cek apakah ada huruf yang bisa dienkripsi
                 result = vigenere(text, key, mode.lower())
                 st.success(f"Hasil: {result}")
+                # Tampilkan informasi tentang karakter yang tidak dienkripsi
+                non_alpha = sum(not c.isalpha() for c in text)
+                if non_alpha > 0:
+                    st.info(f"Info: {non_alpha} karakter non-alphabet dalam teks tetap tidak berubah.")
+            else:
+                st.warning("Teks tidak mengandung huruf yang dapat dienkripsi!")
         else:
             st.error("Mohon isi teks dan key terlebih dahulu")
 
