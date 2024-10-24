@@ -92,6 +92,10 @@ def generate_rsa_keys(bits=2048):
     d = pow(e, -1, phi)
     return (e, n), (d, n)
 
+def two_to_one(d,n):
+    return (d,n)
+
+
 def rsa_encrypt(message, public_key):
     e, n = public_key
     message_bytes = message.encode()
@@ -231,14 +235,16 @@ elif menu == "RSA":
             try:
                 result = rsa_encrypt(text, st.session_state.public_key)
                 st.write(f"Hasil Enkripsi: {result}")
-                st.write(f"Private Key : {st.session_state.private_key}")
+                st.write(f"Private Key (d,n) : {st.session_state.private_key}")
             except ValueError as e:
                 st.error(str(e))
 
     else:
         encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
-        key = st.text_input("Masukkan Private key")
+        keyd = st.number_input("Masukkan Private key(d)",value=None)
+        keyn = st.number_input("Masukkan Private key(n)",value=None)
         if st.button("Dekripsi"):
+            key = two_to_one(keyd,keyn)
             result = rsa_decrypt(encrypted_text,key)
             st.write(f"Hasil Dekripsi: {result}")
 
@@ -264,8 +270,3 @@ elif menu == "AES":
                 st.write(f"Hasil Dekripsi: {result}")
             except ValueError:
                 st.error("Format kunci tidak valid!")
-
-elif menu == "Super Enkripsi":
-    st.header("Super Enkripsi Caesar dan Vigenere")
-    text = st.text_input("Masukkan Teks")
-    mode = st.radio("Mode", ["Encrypt", "Decrypt"])
