@@ -22,7 +22,6 @@ def caesar_cipher(text, key, mode='encrypt'):
 # ========== Vigenere Cipher ==========
 def vigenere(text, key, mode='encrypt'):
     # Mengubah key menjadi uppercase untuk perhitungan
-    key = key.upper()
     key_length = len(key)
     key_as_int = [ord(i) for i in key]
     result = list(text)  # Mengubah text menjadi list untuk memudahkan penggantian karakter
@@ -61,7 +60,8 @@ def vigenere(text, key, mode='encrypt'):
             result[i] = text[i]
     
     # Mengembalikan hasil sebagai string
-    return ''.join(result)    
+    return ''.join(result)
+    
 # ========== Simple RSA Implementation ==========
 def is_prime(n, k=5):
     if n < 2: return False
@@ -197,7 +197,7 @@ if 'public_key' not in st.session_state or 'private_key' not in st.session_state
 if 'aes_key' not in st.session_state:
     st.session_state.aes_key = os.urandom(32)
 
-menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Vigenere", "RSA", "AES"])
+menu = st.sidebar.selectbox("Pilih Metode", ["Caesar Cipher", "Vigenere", "RSA", "AES","Super Enkripsi"])
 
 if menu == "Caesar Cipher":
     st.header("Caesar Cipher")
@@ -217,7 +217,7 @@ elif menu == "Vigenere":
 
     if st.button("Proses"):
         if key and text:  # Memastikan input tidak kosong
-            result = vigenere(text, key, mode.lower())
+            result = vigenere(text, key, mode)
             st.success(f"Hasil: {result}")
         else:
             st.error("Mohon isi teks dan key terlebih dahulu")
@@ -234,13 +234,15 @@ elif menu == "RSA":
             try:
                 result = rsa_encrypt(text, st.session_state.public_key)
                 st.write(f"Hasil Enkripsi: {result}")
+                st.write(f"Private Key : {st.session_state.private_key}")
             except ValueError as e:
                 st.error(str(e))
 
     else:
         encrypted_text = st.text_input("Masukkan Teks Terenkripsi")
+        key = st.text_input("Masukkan Private key")
         if st.button("Dekripsi"):
-            result = rsa_decrypt(encrypted_text, st.session_state.private_key)
+            result = rsa_decrypt(encrypted_text,key)
             st.write(f"Hasil Dekripsi: {result}")
 
 elif menu == "AES":
